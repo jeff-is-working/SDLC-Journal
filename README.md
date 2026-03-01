@@ -93,4 +93,4 @@ For coding conventions and how to extend the app, see [docs/DEVELOPER_GUIDE.md](
 
 The SDLC technique is a mental health resource for IT professionals, adapting positive psychology practices to the unique challenges of technology and cybersecurity work. See [SDLC-2.md](SDLC-2.md) for the full technique description.
 
-A [Circle 6 Systems](https://circle6.systems) initiative for psychological safety in IT.
+A [Circle 6 Systems](https://circle6systems.com) initiative for psychological safety in IT.
