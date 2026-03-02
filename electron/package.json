@@ -1,6 +1,6 @@
 {
   "name": "peoplesafe-sdlc-journal",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "PeopleSafe SDLC Journal — Client-side encrypted journaling for IT professionals",
   "main": "main.js",
   "author": "Circle 6 Systems <info@circle6systems.com>",
