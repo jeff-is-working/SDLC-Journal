@@ -22,3 +22,8 @@ node_modules/
 electron/node_modules/
 electron/dist/
 electron/out/
+
+# Security assessments (contain sensitive findings — do not sync to remote)
+SECURITY-ASSESSMENT*
+*-security-assessment*
+*-pentest-report*

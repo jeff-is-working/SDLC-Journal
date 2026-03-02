@@ -52,6 +52,8 @@ document.addEventListener('alpine:init', () => {
     // Session
     _lockTimer: null,
     _lastActivity: Date.now(),
+    _failedAttempts: 0,
+    _lockoutUntil: 0,
 
     // --- Init ---
     async init() {
@@ -72,8 +74,8 @@ document.addEventListener('alpine:init', () => {
       // Session management
       this._setupSessionHandlers();
 
-      // Expose app reference for Electron bridge (inert in browser)
-      window.sdlcAppRef = this;
+      // Expose app reference for Electron bridge (only when running in Electron)
+      if (window.electronAPI) window.sdlcAppRef = this;
     },
 
     // --- Auth ---
@@ -120,6 +122,13 @@ document.addEventListener('alpine:init', () => {
     async unlock() {
       this.error = '';
 
+      // Rate limiting: progressive delay after failed attempts
+      if (Date.now() < this._lockoutUntil) {
+        const remaining = Math.ceil((this._lockoutUntil - Date.now()) / 1000);
+        this.error = `Too many attempts. Please wait ${remaining} seconds.`;
+        return;
+      }
+
       if (!this.passphrase) {
         this.error = 'Please enter your passphrase.';
         return;
@@ -134,6 +143,9 @@ document.addEventListener('alpine:init', () => {
         const computedHash = await Crypto.hashPassphrase(this.passphrase, hashSalt);
 
         if (computedHash !== storedHash) {
+          this._failedAttempts++;
+          const delay = Math.min(Math.pow(2, this._failedAttempts) * 1000, 30000);
+          this._lockoutUntil = Date.now() + delay;
           this.error = 'Incorrect passphrase. Please try again.';
           this.isProcessing = false;
           return;
@@ -142,6 +154,10 @@ document.addEventListener('alpine:init', () => {
         // Derive encryption key
         const keySalt = await Storage.getMeta('keySalt');
         this.cryptoKey = await Crypto.deriveKey(this.passphrase, keySalt);
+
+        // Reset rate limiting on success
+        this._failedAttempts = 0;
+        this._lockoutUntil = 0;
 
         this._clearPassphraseFields();
         await this._enterApp();
@@ -164,15 +180,36 @@ document.addEventListener('alpine:init', () => {
     },
 
     lock() {
+      // Clear the encryption key
       this.cryptoKey = null;
+
+      // Clear all decrypted content
       this.entryForm = { success: '', delight: '', learning: '', compliment: '' };
+      this.editForm = { success: '', delight: '', learning: '', compliment: '' };
       this.selectedEntry = null;
       this.currentRollup = null;
       this.searchResults = null;
+      this.recentEntries = [];
+      this.reflectionText = '';
+      this.subReflections = [];
+      this.browseGroups = [];
+      this.allEntryMetas = [];
+      this.searchQuery = '';
+
+      // Reset UI state
       this.view = 'auth';
       this.error = '';
       this.message = '';
+      this.isEditing = false;
+
+      // Cancel timers
       clearTimeout(this._lockTimer);
+      clearTimeout(this._reflectionSaveTimer);
+
+      // Clear clipboard of any copied journal content
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText('').catch(() => {});
+      }
     },
 
     // --- Dashboard ---
@@ -290,6 +327,15 @@ document.addEventListener('alpine:init', () => {
       this.isEditing = false;
       this.searchResults = null;
       this.searchQuery = '';
+
+      // Move focus to the new view's heading for screen readers
+      this.$nextTick(() => {
+        const heading = document.querySelector('[x-show="view === \'' + view + '\'"] h2');
+        if (heading) {
+          heading.setAttribute('tabindex', '-1');
+          heading.focus();
+        }
+      });
     },
 
     // --- Browse ---

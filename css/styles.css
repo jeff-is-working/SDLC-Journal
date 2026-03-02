@@ -15,7 +15,7 @@
   --accent: #8faa7b;
   --accent-dim: #8faa7b30;
 
-  /* SDLC Category Colors */
+  /* SDLC Category Colors (borders, backgrounds) */
   --success-color: #8faa7b;
   --success-bg: #8faa7b18;
   --delight-color: #d4a85c;
@@ -24,6 +24,12 @@
   --learning-bg: #7a9bb518;
   --compliment-color: #c17c8e;
   --compliment-bg: #c17c8e18;
+
+  /* WCAG AA compliant text variants (4.5:1 minimum on --navy-light) */
+  --success-text: #a3c090;
+  --delight-text: #e0bc72;
+  --learning-text: #93b5cb;
+  --compliment-text: #d592a3;
 
   /* Layout */
   --max-width: 900px;
@@ -175,6 +181,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.15rem;
   background: none;
   border: none;
@@ -182,6 +189,8 @@ a:hover {
   font-size: 0.65rem;
   cursor: pointer;
   padding: 0.25rem 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: var(--radius);
   transition: color var(--transition);
 }
@@ -272,10 +281,10 @@ textarea.form-input {
   font-size: 0.9rem;
 }
 
-.sdlc-label.success { color: var(--success-color); }
-.sdlc-label.delight { color: var(--delight-color); }
-.sdlc-label.learning { color: var(--learning-color); }
-.sdlc-label.compliment { color: var(--compliment-color); }
+.sdlc-label.success { color: var(--success-text); }
+.sdlc-label.delight { color: var(--delight-text); }
+.sdlc-label.learning { color: var(--learning-text); }
+.sdlc-label.compliment { color: var(--compliment-text); }
 
 .sdlc-icon {
   font-size: 1rem;
@@ -550,10 +559,10 @@ textarea.form-input {
   margin-bottom: 0.25rem;
 }
 
-.entry-detail-category.success .entry-detail-label { color: var(--success-color); }
-.entry-detail-category.delight .entry-detail-label { color: var(--delight-color); }
-.entry-detail-category.learning .entry-detail-label { color: var(--learning-color); }
-.entry-detail-category.compliment .entry-detail-label { color: var(--compliment-color); }
+.entry-detail-category.success .entry-detail-label { color: var(--success-text); }
+.entry-detail-category.delight .entry-detail-label { color: var(--delight-text); }
+.entry-detail-category.learning .entry-detail-label { color: var(--learning-text); }
+.entry-detail-category.compliment .entry-detail-label { color: var(--compliment-text); }
 
 .entry-detail-text {
   font-size: 0.9rem;

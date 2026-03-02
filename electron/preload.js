@@ -1,6 +1,7 @@
 /**
  * PeopleSafe SDLC Journal — Electron Preload Script
  * Exposes a safe API to the renderer via contextBridge.
+ * Sandbox-compatible: no fs or path imports.
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
@@ -31,20 +32,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   platform: process.platform
 });
 
-// Inject the electron-bridge.js into the renderer after DOM is ready.
-// This wires up IPC events to the Alpine.js app methods.
-// We read the file and inject inline since the electron/ dir isn't served by app://.
-const fs = require('fs');
-const path = require('path');
-
-window.addEventListener('DOMContentLoaded', () => {
+// Inject the electron-bridge.js via IPC (sandbox-safe — no fs access needed)
+window.addEventListener('DOMContentLoaded', async () => {
   try {
-    const bridgePath = path.join(__dirname, 'electron-bridge.js');
-    const bridgeCode = fs.readFileSync(bridgePath, 'utf8');
+    const bridgeCode = await ipcRenderer.invoke('bridge:code');
     const script = document.createElement('script');
     script.textContent = bridgeCode;
     document.body.appendChild(script);
   } catch (e) {
-    console.error('Failed to load electron-bridge.js:', e);
+    console.error('Failed to load electron-bridge:', e);
   }
 });

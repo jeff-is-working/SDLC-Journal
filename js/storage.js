@@ -210,8 +210,10 @@ const Storage = (() => {
 
     await _open();
 
-    // Import meta
+    // Import meta — protect cryptographic keys from overwrite
+    const protectedKeys = ['passphraseHash', 'passphraseSalt', 'keySalt'];
     for (const item of data.meta) {
+      if (protectedKeys.includes(item.key)) continue;
       await _request(_tx('meta', 'readwrite').put(item));
     }
 

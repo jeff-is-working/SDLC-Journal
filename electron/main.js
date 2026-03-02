@@ -17,10 +17,14 @@ const stateFile = path.join(app.getPath('userData'), 'window-state.json');
 
 function loadWindowState() {
   try {
-    return JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-  } catch {
-    return { width: 960, height: 720 };
-  }
+    const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+    // Validate bounds to prevent off-screen positioning
+    if (typeof state.width === 'number' && state.width >= 480 && state.width <= 4096 &&
+        typeof state.height === 'number' && state.height >= 600 && state.height <= 4096) {
+      return state;
+    }
+  } catch { /* ignore corrupt state file */ }
+  return { width: 960, height: 720 };
 }
 
 function saveWindowState() {
@@ -61,7 +65,8 @@ function registerProtocol() {
     // Security: ensure resolved path is within the app base
     const resolved = path.resolve(filePath);
     const base = path.resolve(getAppBasePath());
-    if (!resolved.startsWith(base)) {
+    const normalizedBase = base + path.sep;
+    if (resolved !== base && !resolved.startsWith(normalizedBase)) {
       callback({ statusCode: 403 });
       return;
     }
@@ -87,7 +92,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: true
     }
   });
 
@@ -140,12 +145,19 @@ function createWindow() {
 // --- IPC Handlers ---
 
 function setupIPC() {
+  // Track dialog-approved paths (single use)
+  let _approvedSavePath = null;
+  let _approvedReadPath = null;
+
   // File dialogs
   ipcMain.handle('dialog:save', async (_event, options) => {
     const result = await dialog.showSaveDialog(mainWindow, {
       defaultPath: options.defaultPath || 'backup.json',
       filters: options.filters || [{ name: 'JSON Files', extensions: ['json'] }]
     });
+    if (!result.canceled && result.filePath) {
+      _approvedSavePath = result.filePath;
+    }
     return result;
   });
 
@@ -154,22 +166,49 @@ function setupIPC() {
       filters: options.filters || [{ name: 'JSON Files', extensions: ['json'] }],
       properties: ['openFile']
     });
+    if (!result.canceled && result.filePaths && result.filePaths[0]) {
+      _approvedReadPath = result.filePaths[0];
+    }
     return result;
   });
 
-  // File I/O
+  // File I/O — restricted to dialog-approved paths
   ipcMain.handle('file:save', async (_event, filePath, data) => {
+    if (!_approvedSavePath || filePath !== _approvedSavePath) {
+      throw new Error('File path not approved by dialog');
+    }
     await fs.promises.writeFile(filePath, data, 'utf8');
+    _approvedSavePath = null;
     return true;
   });
 
   ipcMain.handle('file:read', async (_event, filePath) => {
-    return fs.promises.readFile(filePath, 'utf8');
+    if (!_approvedReadPath || filePath !== _approvedReadPath) {
+      throw new Error('File path not approved by dialog');
+    }
+    const content = await fs.promises.readFile(filePath, 'utf8');
+    _approvedReadPath = null;
+    return content;
   });
 
-  // Shell
+  // Shell — only allow HTTP(S) URLs
   ipcMain.handle('shell:openExternal', (_event, url) => {
+    if (typeof url !== 'string') return Promise.reject(new Error('Invalid URL'));
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+        return Promise.reject(new Error('Only HTTP and HTTPS URLs are allowed'));
+      }
+    } catch {
+      return Promise.reject(new Error('Invalid URL'));
+    }
     return shell.openExternal(url);
+  });
+
+  // Bridge code for sandbox-safe injection
+  ipcMain.handle('bridge:code', () => {
+    const bridgePath = path.join(__dirname, 'electron-bridge.js');
+    return fs.readFileSync(bridgePath, 'utf8');
   });
 
   // App lifecycle

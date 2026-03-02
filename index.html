@@ -31,7 +31,7 @@
     <div class="card card-centered">
       <h1>Browser Not Supported</h1>
       <p style="margin-top:1rem;">This app requires Web Crypto API and IndexedDB. Please use a modern browser (Chrome, Firefox, Safari, Edge).</p>
-      <p x-show="error" x-text="error" class="message message-error" style="margin-top:1rem;"></p>
+      <p x-show="error" x-text="error" class="message message-error" role="alert" style="margin-top:1rem;"></p>
     </div>
   </template>
 
@@ -52,7 +52,7 @@
 
       <p style="color:var(--slate);margin-bottom:1rem;font-size:0.9rem;">Choose a passphrase to protect your journal.</p>
 
-      <div x-show="error" x-text="error" class="message message-error"></div>
+      <div x-show="error" x-text="error" class="message message-error" role="alert"></div>
 
       <div class="form-group" style="text-align:left;">
         <label class="form-label" for="setup-pass">Passphrase</label>
@@ -87,7 +87,7 @@
       <h1>Welcome Back</h1>
       <p style="color:var(--slate);margin-bottom:1.5rem;">Enter your passphrase to unlock your journal.</p>
 
-      <div x-show="error" x-text="error" class="message message-error"></div>
+      <div x-show="error" x-text="error" class="message message-error" role="alert"></div>
 
       <div class="form-group" style="text-align:left;">
         <label class="form-label" for="auth-pass">Passphrase</label>
@@ -128,8 +128,8 @@
       </nav>
 
       <!-- Messages -->
-      <div x-show="error" x-text="error" class="message message-error" x-transition></div>
-      <div x-show="message" x-text="message" class="message message-success" x-transition></div>
+      <div x-show="error" x-text="error" class="message message-error" role="alert" x-transition></div>
+      <div x-show="message" x-text="message" class="message message-success" role="status" aria-live="polite" x-transition></div>
 
       <!-- ==================== DASHBOARD ==================== -->
       <div x-show="view === 'dashboard'" x-transition>
@@ -138,31 +138,31 @@
 
         <div class="card">
           <div class="sdlc-field success">
-            <label class="sdlc-label success">
+            <label class="sdlc-label success" for="entry-success">
               <span class="sdlc-icon">&#10003;</span> Success
             </label>
-            <textarea class="form-input" x-model="entryForm.success" placeholder="Where did I have success today?" rows="3"></textarea>
+            <textarea id="entry-success" class="form-input" x-model="entryForm.success" placeholder="Where did I have success today?" rows="3"></textarea>
           </div>
 
           <div class="sdlc-field delight">
-            <label class="sdlc-label delight">
+            <label class="sdlc-label delight" for="entry-delight">
               <span class="sdlc-icon">&#9733;</span> Delight
             </label>
-            <textarea class="form-input" x-model="entryForm.delight" placeholder="What brought me delight today?" rows="3"></textarea>
+            <textarea id="entry-delight" class="form-input" x-model="entryForm.delight" placeholder="What brought me delight today?" rows="3"></textarea>
           </div>
 
           <div class="sdlc-field learning">
-            <label class="sdlc-label learning">
+            <label class="sdlc-label learning" for="entry-learning">
               <span class="sdlc-icon">&#9998;</span> Learning
             </label>
-            <textarea class="form-input" x-model="entryForm.learning" placeholder="What did I learn today?" rows="3"></textarea>
+            <textarea id="entry-learning" class="form-input" x-model="entryForm.learning" placeholder="What did I learn today?" rows="3"></textarea>
           </div>
 
           <div class="sdlc-field compliment">
-            <label class="sdlc-label compliment">
+            <label class="sdlc-label compliment" for="entry-compliment">
               <span class="sdlc-icon">&#9829;</span> Compliment
             </label>
-            <textarea class="form-input" x-model="entryForm.compliment" placeholder="What can I compliment about my day?" rows="3"></textarea>
+            <textarea id="entry-compliment" class="form-input" x-model="entryForm.compliment" placeholder="What can I compliment about my day?" rows="3"></textarea>
           </div>
 
           <button class="btn btn-primary btn-block" @click="saveEntry()" :disabled="isProcessing">
@@ -177,7 +177,11 @@
             <h3>Recent Entries</h3>
             <div class="entry-list" style="margin-top:0.5rem;">
               <template x-for="entry in recentEntries" :key="entry.date">
-                <div class="entry-item" @click="navigate('browse'); $nextTick(() => viewEntry(entry.date))">
+                <div class="entry-item" role="button" tabindex="0"
+                     @click="navigate('browse'); $nextTick(() => viewEntry(entry.date))"
+                     @keydown.enter="navigate('browse'); $nextTick(() => viewEntry(entry.date))"
+                     @keydown.space.prevent="navigate('browse'); $nextTick(() => viewEntry(entry.date))"
+                     :aria-label="'View entry for ' + entry.dateLabel">
                   <div>
                     <div class="entry-date" x-text="entry.dateLabel"></div>
                     <div class="entry-preview" x-text="entry.preview"></div>
@@ -238,20 +242,20 @@
             <template x-if="isEditing">
               <div class="card" style="margin-top:1rem;">
                 <div class="sdlc-field success">
-                  <label class="sdlc-label success"><span class="sdlc-icon">&#10003;</span> Success</label>
-                  <textarea class="form-input" x-model="editForm.success" rows="3"></textarea>
+                  <label class="sdlc-label success" for="edit-success"><span class="sdlc-icon">&#10003;</span> Success</label>
+                  <textarea id="edit-success" class="form-input" x-model="editForm.success" rows="3"></textarea>
                 </div>
                 <div class="sdlc-field delight">
-                  <label class="sdlc-label delight"><span class="sdlc-icon">&#9733;</span> Delight</label>
-                  <textarea class="form-input" x-model="editForm.delight" rows="3"></textarea>
+                  <label class="sdlc-label delight" for="edit-delight"><span class="sdlc-icon">&#9733;</span> Delight</label>
+                  <textarea id="edit-delight" class="form-input" x-model="editForm.delight" rows="3"></textarea>
                 </div>
                 <div class="sdlc-field learning">
-                  <label class="sdlc-label learning"><span class="sdlc-icon">&#9998;</span> Learning</label>
-                  <textarea class="form-input" x-model="editForm.learning" rows="3"></textarea>
+                  <label class="sdlc-label learning" for="edit-learning"><span class="sdlc-icon">&#9998;</span> Learning</label>
+                  <textarea id="edit-learning" class="form-input" x-model="editForm.learning" rows="3"></textarea>
                 </div>
                 <div class="sdlc-field compliment">
-                  <label class="sdlc-label compliment"><span class="sdlc-icon">&#9829;</span> Compliment</label>
-                  <textarea class="form-input" x-model="editForm.compliment" rows="3"></textarea>
+                  <label class="sdlc-label compliment" for="edit-compliment"><span class="sdlc-icon">&#9829;</span> Compliment</label>
+                  <textarea id="edit-compliment" class="form-input" x-model="editForm.compliment" rows="3"></textarea>
                 </div>
                 <div class="btn-group">
                   <button class="btn btn-primary" @click="saveEdit()" :disabled="isProcessing">Save Changes</button>
@@ -269,7 +273,9 @@
 
             <!-- Search -->
             <div class="search-bar" style="margin-top:1rem;">
-              <input class="form-input" x-model="searchQuery" placeholder="Search entries&hellip;"
+              <label for="search-entries" class="sr-only">Search journal entries</label>
+              <input id="search-entries" class="form-input" x-model="searchQuery" placeholder="Search entries&hellip;"
+                     aria-label="Search journal entries"
                      @input="search()" @keydown.escape="searchQuery = ''; searchResults = null;">
             </div>
 
@@ -282,7 +288,11 @@
                 </p>
                 <div class="entry-list">
                   <template x-for="result in searchResults" :key="result.date">
-                    <div class="entry-item" @click="viewEntry(result.date)">
+                    <div class="entry-item" role="button" tabindex="0"
+                         @click="viewEntry(result.date)"
+                         @keydown.enter="viewEntry(result.date)"
+                         @keydown.space.prevent="viewEntry(result.date)"
+                         :aria-label="'View entry for ' + result.dateLabel">
                       <div>
                         <div class="entry-date" x-text="result.dateLabel"></div>
                         <div class="entry-preview" x-text="result.preview"></div>
@@ -309,7 +319,11 @@
                     <div class="month-label" x-text="group.label"></div>
                     <div class="entry-list">
                       <template x-for="entry in group.entries" :key="entry.date">
-                        <div class="entry-item" @click="viewEntry(entry.date)">
+                        <div class="entry-item" role="button" tabindex="0"
+                             @click="viewEntry(entry.date)"
+                             @keydown.enter="viewEntry(entry.date)"
+                             @keydown.space.prevent="viewEntry(entry.date)"
+                             :aria-label="'View entry for ' + Utils.formatDateShort(entry.date)">
                           <div>
                             <div class="entry-date" x-text="Utils.formatDateShort(entry.date)"></div>
                           </div>
@@ -340,7 +354,8 @@
         <!-- Period Selector -->
         <template x-if="currentPeriods.length > 0">
           <div class="period-selector">
-            <select class="period-select" x-model="selectedPeriod" @change="selectPeriod(selectedPeriod)">
+            <label for="period-select" class="sr-only">Select period</label>
+            <select id="period-select" class="period-select" x-model="selectedPeriod" @change="selectPeriod(selectedPeriod)">
               <template x-for="p in currentPeriods" :key="p">
                 <option :value="p" x-text="formatPeriodLabel(p)"></option>
               </template>
@@ -398,12 +413,13 @@
 
               <!-- Editable Reflection -->
               <div class="reflection-section">
-                <h4 style="margin-bottom:0.5rem;">Your Reflection</h4>
+                <h4 id="reflection-heading" style="margin-bottom:0.5rem;">Your Reflection</h4>
                 <p style="font-size:0.8rem;color:var(--slate);margin-bottom:0.5rem;">
                   Reflect on this period. What patterns do you notice? Auto-saved as you type.
                 </p>
-                <textarea class="form-input" x-model="reflectionText" @input="onReflectionInput()"
-                          placeholder="Write your reflection here&hellip;" rows="5"></textarea>
+                <label for="reflection-text" class="sr-only">Your reflection for this period</label>
+                <textarea id="reflection-text" class="form-input" x-model="reflectionText" @input="onReflectionInput()"
+                          placeholder="Write your reflection here&hellip;" rows="5" aria-describedby="reflection-heading"></textarea>
               </div>
             </div>
           </div>
@@ -492,7 +508,7 @@
               Restore from a previously exported backup. Newer entries will take priority during merge.
             </p>
             <input type="file" accept=".json" @change="importData($event)" style="font-size:0.85rem;color:var(--slate-light);">
-            <p x-show="importError" x-text="importError" class="message message-error" style="margin-top:0.5rem;"></p>
+            <p x-show="importError" x-text="importError" class="message message-error" role="alert" style="margin-top:0.5rem;"></p>
           </div>
 
           <!-- Clear All -->
@@ -505,10 +521,11 @@
               <button class="btn btn-danger" @click="showClearConfirm = true">Clear All Data</button>
             </template>
             <template x-if="showClearConfirm">
-              <div>
+              <div role="alertdialog" aria-label="Confirm data deletion">
                 <p style="font-size:0.85rem;color:#c46a5e;margin-bottom:0.5rem;">Type <strong>DELETE ALL</strong> to confirm:</p>
                 <div style="display:flex;gap:0.5rem;">
-                  <input class="form-input" x-model="clearConfirmText" placeholder="DELETE ALL" style="max-width:200px;">
+                  <label for="clear-confirm-input" class="sr-only">Type DELETE ALL to confirm</label>
+                  <input id="clear-confirm-input" class="form-input" x-model="clearConfirmText" placeholder="DELETE ALL" style="max-width:200px;">
                   <button class="btn btn-danger" @click="clearAllData()" :disabled="clearConfirmText !== 'DELETE ALL'">Confirm Delete</button>
                   <button class="btn btn-secondary" @click="showClearConfirm = false; clearConfirmText = '';">Cancel</button>
                 </div>
